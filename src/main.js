@@ -1,8 +1,10 @@
 import Vue from 'vue'
 import App from './App.vue'
-import router from './router'
+import router from './middleware'
+import {pxToRem} from './units'
+import store from "./store";
+import Omiv, { render } from 'omiv'
 Vue.config.productionTip = false;
-new Vue({
-  router,
-  render: h => h(App)
-}).$mount('#app')
+if (process.env.config.px2rem){pxToRem(process.env.config.px2remWith, process.env.config.px2remValue)}
+Vue.use(Omiv);
+render(App, '#app', store,{router});

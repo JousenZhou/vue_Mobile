@@ -6,18 +6,21 @@ const FileManagerPlugin = require('filemanager-webpack-plugin');
 
 /** 【开发环境】是否需要使用cdn配置 */
 const devNeedCdn = true;
-/** 【全局】是否需要使用px转rem */
-const needPx2rem = true;
-/** 设置 1(rem) 等于 n (px)*/
-const px2remValue = 10;
-/** 【开发环境】是否需要使用px转rem */
-const devNeedPx2rem = false;
 /** 【生产环境】build构建后是否执行压缩操作至桌面*/
 const compress = true;
-/** 【生产环境】build构建后是否保留根目录打包源文件夹【compress=true才生效】*/
-const saveDist = false;
+/** 【生产环境】build构建后是否保留根目录打包源文件夹【compress=true才生效】默认保留根目录*/
+const saveDist = true;
+
+// 移动端配置
 /** 是否移动端开发[true/执行px转rem,入口src/main自动添加resize事件自动适配font-size至根元素]  【**以后更新将加载移动端专有api**】*/
 const mobileDevelop = true;
+/** 是否需要使用px转rem【mobileDevelop=true】生效 */
+const needPx2rem = true;
+/** 设计稿宽度*/
+const px2remWith = 375;
+/** 设置 1(rem) 等于 n (px)*/
+const px2remValue = 10;
+
 /** 判断环境*/
 const isProduction = process.env.NODE_ENV !== 'development';
 /** 环境配置*/
@@ -26,7 +29,7 @@ let env = {
         BASE_API:'"/"',
         proxy: {
             "/": {
-                target: "http://app-beta.com/",
+                target: "http://pv.sohu.com/", //天气预报模拟
                 changeOrigin: true,
                 pathRewrite: {
                     "^/": "/"
@@ -54,7 +57,7 @@ const cdn = {
         vue: 'Vue',
         'vue-router': 'VueRouter',
     },
-    /**css外链*/
+    /**css外链[个人不建议css外链]*/
     css: [
 
     ],
@@ -64,9 +67,13 @@ const cdn = {
         'https://cdn.bootcss.com/vue-router/3.1.3/vue-router.min.js'
     ]
 };
-
 let outputDir = env[process.argv[process.argv.length-1]].OUTPUT_NAME;
-let postcss_plugins =  [require('postcss-px2rem')({remUnit: px2remValue})];
+let postcss_plugins =  mobileDevelop&&needPx2rem?[require('postcss-px2rem')({remUnit: px2remValue})]:[];
+if(mobileDevelop&&needPx2rem){
+    env[process.argv[process.argv.length-1]]['px2rem'] = true;
+    env[process.argv[process.argv.length-1]]['px2remWith'] = px2remWith;
+    env[process.argv[process.argv.length-1]]['px2remValue'] = px2remValue;
+}
 console.log(colors.black('当前环境：').bgRed,'[',colors.red(process.argv[process.argv.length-1]),']\n');
 console.log(colors.black('BASE_API：').bgGreen,colors.green(env[process.argv[process.argv.length-1]].BASE_API),'\n');
 
@@ -104,7 +111,7 @@ module.exports = {
         config
             .plugin('define')
             .tap(args => {
-                args[0].env = env[process.argv[process.argv.length-1]];
+                args[0]["process.env"].config = JSON.stringify(env[process.argv[process.argv.length-1]]);
                 return args
             });
         /**[html]cnd配置插入html模块*/
@@ -115,14 +122,6 @@ module.exports = {
                 args[0].title = 'VuePage';
                 return args
             });
-        /**压缩图片*/
-        isProduction&&
-        config.module
-            .rule('images')
-            .use('image-webpack-loader')
-            .loader('image-webpack-loader')
-            .options({ bypassOnDebug: true })
-            .end();
         /**拆包*/
         isProduction&&
         config.optimization.splitChunks({
@@ -144,7 +143,7 @@ module.exports = {
             });
         /**打包后文件压缩zip  DesktopPath：桌面路径*/
         let DesktopPath = path.resolve( require('os').homedir() , 'Desktop' );
-        isProduction&&
+        isProduction&&compress&&
         config.plugin('compress')
             .use(FileManagerPlugin, [{
                 onEnd: {
@@ -152,7 +151,7 @@ module.exports = {
                     archive: [ //然后我们选择dist文件夹将之打包成dist.zip并放在根目录
                         { source: `./${outputDir}`, destination: path.resolve(DesktopPath,`${outputDir}.zip`)},//需要压缩的资源
                     ],
-                    delete: [
+                    delete: saveDist?[]:[
                         `./${outputDir}`,
                     ],
                 }
