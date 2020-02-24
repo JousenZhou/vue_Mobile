@@ -23,15 +23,44 @@
     JavaScript enabled. Please enable it to continue.</strong
   >
 </noscript>
+
 <div id="app"></div>
 
 <!-- 使用CDN的JS文件 -->
-<% for (var i in htmlWebpackPlugin.options.cdn &&
-htmlWebpackPlugin.options.cdn.js) { %>
-<script src="<%= htmlWebpackPlugin.options.cdn.js[i] %>"></script>
+<% for (var i in htmlWebpackPlugin.options.cdn && htmlWebpackPlugin.options.cdn.js) { %>
+  <% for (var a in htmlWebpackPlugin.options.cdn.js[i]) { %>
+      <script>window["<%= htmlWebpackPlugin.options.cdn.externalsName[i] %>"] || document.write('<script src="<%= htmlWebpackPlugin.options.cdn.js[i][a] %>"><\/script>')</script>
+  <% } %>
 <% } %>
-<!-- 使用CDN的JS文件 -->
 
-<!-- built files will be auto injected -->
+<!-- css插件配置 -->
+<script>
+      let postcssPlugins = "<%= htmlWebpackPlugin.options.cssPlugin %>";
+      switch (postcssPlugins) {
+          case "vw":
+            document.write('<script src="https://g.alicdn.com/fdilab/lib3rd/viewport-units-buggyfill/0.6.2/??viewport-units-buggyfill.hacks.min.js,viewport-units-buggyfill.min.js"><\/script>')
+            window.onload = function () {
+              window.viewportUnitsBuggyfill.init({
+                hacks: window.viewportUnitsBuggyfillHacks
+              })
+            };
+              break;
+          case "rem":
+            let pxToRem = function (pxWidth, pxRem) {
+              let setFontSize = function () {
+                let html = document.getElementsByTagName("html")[0];
+                let oWidth = window.innerWidth;
+                html.style.fontSize = oWidth / pxWidth * pxRem + "px";};
+              setFontSize();
+              window.onresize = function () {setFontSize();};
+              window.οnlοad = function () {setTimeout(function () {window.scrollTo(0, 1)}, 0);};
+            };
+            pxToRem("<%= htmlWebpackPlugin.options.cssOptions.px2remWith %>","<%= htmlWebpackPlugin.options.cssOptions.px2remValue %>");
+            break;
+      }
+      console.log('应用postcssPlugins插件:',postcssPlugins)
+
+</script>
+
 </body>
 </html>

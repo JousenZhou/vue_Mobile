@@ -1,4 +1,4 @@
-const store = new class {
+export default new class {
     data = {
         count: 1
     };
@@ -9,4 +9,3 @@ const store = new class {
         this.data.count++
     }
 };
-export default store;

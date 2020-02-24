@@ -1,9 +1,9 @@
 <template>
   <div id="app" >
     <router-view/>
-    <p>fly请求测试</p>
-    <p>当前ip地址:【{{ip}}】</p>
-    <p>当前位置:【{{location}}】</p>
+<!--    <p>fly请求测试</p>-->
+<!--    <p>当前ip地址:【{{ip}}】</p>-->
+<!--    <p>当前位置:【{{location}}】</p>-->
   </div>
 </template>
 <script>
